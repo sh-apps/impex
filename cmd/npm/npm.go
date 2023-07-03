@@ -32,8 +32,6 @@ type Package struct {
 	Dependencies map[string]string `json:"dependencies"`
 }
 
-var ErrMissingLockFilePath = errors.New("missing lockfile path")
-
 type Arguments struct {
 	FileName string
 	Log      *slog.Logger

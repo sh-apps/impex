@@ -6,16 +6,19 @@ import (
 	"os"
 
 	"github.com/example-pipeline/impex/cmd/npm"
+	"github.com/example-pipeline/impex/cmd/vsix"
 	"golang.org/x/exp/slog"
 )
 
 var help = `Usage: impex [cmd]
 
   npm
+	vsix
 
 Examples:
 
   impex npm /path/to/package-lock.json
+  impex vsix /path/to/file/list.txt
 `
 
 func main() {
@@ -29,6 +32,8 @@ func main() {
 	switch cmd {
 	case "npm":
 		npmCmd(args[1:])
+	case "vsix":
+		vsixCmd(args[1:])
 	default:
 		fmt.Println(help)
 	}
@@ -47,6 +52,24 @@ func npmCmd(args []string) {
 		return
 	}
 	err = npm.Run(npm.Arguments{
+		FileName: *fileName,
+	})
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+}
+
+func vsixCmd(args []string) {
+	cmd := flag.NewFlagSet("vsix", flag.ExitOnError)
+	fileName := cmd.String("file", "", "Path to the list of packages to download.")
+	helpFlag := cmd.Bool("help", false, "Print help and exit.")
+	err := cmd.Parse(args)
+	if err != nil || *helpFlag || fileName == nil || *fileName == "" {
+		cmd.PrintDefaults()
+		return
+	}
+	err = vsix.Run(vsix.Arguments{
 		FileName: *fileName,
 	})
 	if err != nil {
