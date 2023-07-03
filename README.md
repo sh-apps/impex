@@ -15,3 +15,9 @@ go run *.go npm -lock-file=../app-nodejs/package-lock.json
 ```
 go run *.go vsix -file=./vsix.txt
 ```
+
+### download-containers
+
+```
+go run *.go container -file=./containers.txt
+```
