@@ -140,7 +140,7 @@ func getFileName(from string) (fileName string, err error) {
 	if name == "" {
 		return fileName, fmt.Errorf("no filename present in path %q for URL %q", u.Path, from)
 	}
-	return path.Join("packages", name), nil
+	return path.Join("package/npm", name), nil
 }
 
 func hashFile(name string) (hash string, err error) {
@@ -228,8 +228,8 @@ func download(from, targetFileName, expectedHash string) (err error) {
 }
 
 func createOutputDirectory() error {
-	if _, err := os.Stat("packages"); os.IsNotExist(err) {
-		return os.Mkdir("packages", 0770)
+	if _, err := os.Stat("package/npm"); os.IsNotExist(err) {
+		return os.MkdirAll("package/npm", 0770)
 	}
 	return nil
 }

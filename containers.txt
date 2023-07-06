@@ -1,2 +1,4 @@
 docker.io/alpine:latest
 docker.io/sonatype/nexus3:latest
+ghcr.io/example-pipeline/devcontainer:main
+ghcr.io/example-pipeline/cicd:main

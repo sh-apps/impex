@@ -78,7 +78,7 @@ func download(name string) (err error) {
 	}
 
 	// Create the target.
-	targetFileName := path.Join("extensions", name+".vsix")
+	targetFileName := path.Join("package/vsix", name+".vsix")
 	w, err := os.Create(targetFileName)
 	if err != nil {
 		return err
@@ -90,8 +90,8 @@ func download(name string) (err error) {
 }
 
 func createOutputDirectory() error {
-	if _, err := os.Stat("extensions"); os.IsNotExist(err) {
-		return os.Mkdir("extensions", 0770)
+	if _, err := os.Stat("package/vsix"); os.IsNotExist(err) {
+		return os.MkdirAll("package/vsix", 0770)
 	}
 	return nil
 }

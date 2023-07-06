@@ -49,6 +49,12 @@ func Run(args Arguments) error {
 	var downloadsComplete int
 	for _, container := range downloads {
 		if len(container) == 0 {
+			downloadsComplete++
+			continue
+		}
+		if strings.HasPrefix(container, "#") {
+			log.Info("Skipping", slog.String("name", container), slog.Int("total", len(downloads)))
+			downloadsComplete++
 			continue
 		}
 		log.Info("Downloading", slog.String("name", container), slog.Int("total", len(downloads)))
@@ -88,7 +94,7 @@ func download(name string) (err error) {
 	}
 
 	// Create the target.
-	targetFileName := path.Join("containers", getFileName(name))
+	targetFileName := path.Join("package/containers", getFileName(name))
 	w, err := os.Create(targetFileName)
 	if err != nil {
 		return err
@@ -112,8 +118,8 @@ func getFileName(name string) string {
 }
 
 func createOutputDirectory() error {
-	if _, err := os.Stat("containers"); os.IsNotExist(err) {
-		return os.Mkdir("containers", 0770)
+	if _, err := os.Stat("package/containers"); os.IsNotExist(err) {
+		return os.MkdirAll("package/containers", 0770)
 	}
 	return nil
 }
