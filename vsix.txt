@@ -10,3 +10,4 @@ ms-vscode-remote.vscode-remote-extensionpack
 ms-vscode.PowerShell
 redhat.vscode-yaml
 vscodevim.vim
+bbenoist.Nix

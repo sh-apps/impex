@@ -22,3 +22,11 @@ go run *.go vsix -file=./vsix.txt
 go run *.go container -file=./containers.txt
 ```
 
+### download-actions
+
+This requires the https://github.com/actions/actions-sync tool
+
+```
+mkdir -p package/actions
+actions-sync pull --repo-name-list-file=actions.txt --cache-dir=package/actions
+```
