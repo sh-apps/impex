@@ -1,6 +1,7 @@
 package git
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/google/go-github/v55/github"
 
 	"log/slog"
 )
@@ -18,10 +20,26 @@ import (
 type Arguments struct {
 	FileName    string
 	AccessToken string
-	Log         *slog.Logger
+	// Domain is the domain of the Github instance.
+	// github.com - For public Github
+	// github.example.com - For Github Enterprise
+	Domain string
+	Log    *slog.Logger
 }
 
-func Run(args Arguments) error {
+func Import(args Arguments) (err error) {
+	client := github.NewClient(nil).WithAuthToken(args.AccessToken)
+	if args.Domain != "" {
+		client, err = client.WithEnterpriseURLs(args.Domain, args.Domain)
+		if err != nil {
+			return fmt.Errorf("failed to set domain: %w", err)
+		}
+	}
+	_, _, err = client.Repositories.List(context.Background(), "", nil)
+	return
+}
+
+func Export(args Arguments) error {
 	start := time.Now()
 
 	// Create log.

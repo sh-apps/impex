@@ -165,7 +165,7 @@ func gitExportCmd(args []string) error {
 	if err != nil || *helpFlag || fileName == nil || *fileName == "" || accessToken == nil || *accessToken == "" {
 		return ErrInvalidArgs(cmd)
 	}
-	return git.Run(git.Arguments{
+	return git.Export(git.Arguments{
 		FileName:    *fileName,
 		AccessToken: *accessToken,
 	})
