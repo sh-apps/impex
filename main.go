@@ -66,7 +66,7 @@ func npmCmd(args []string) error {
 	cmd, args := subCommand(args)
 	switch cmd {
 	case "export":
-		return npmExportCommand(args)
+		return npmExportCmd(args)
 	case "import":
 		return fmt.Errorf("not yet implemented")
 	default:
@@ -81,7 +81,7 @@ func ErrInvalidArgs(cmd *flag.FlagSet) error {
 	return fmt.Errorf(b.String())
 }
 
-func npmExportCommand(args []string) error {
+func npmExportCmd(args []string) error {
 	cmd := flag.NewFlagSet("export", flag.ExitOnError)
 	fileName := cmd.String("lock-file", "", "Path to the lock file.")
 	helpFlag := cmd.Bool("help", false, "Print help and exit.")
@@ -95,6 +95,18 @@ func npmExportCommand(args []string) error {
 }
 
 func vsixCmd(args []string) error {
+	cmd, args := subCommand(args)
+	switch cmd {
+	case "export":
+		return vsixExportCmd(args)
+	case "import":
+		return fmt.Errorf("not yet implemented")
+	default:
+		return fmt.Errorf("impex vsix subcommand missing, expected export or import")
+	}
+}
+
+func vsixExportCmd(args []string) error {
 	cmd := flag.NewFlagSet("vsix", flag.ExitOnError)
 	fileName := cmd.String("file", "", "Path to the list of packages to download.")
 	helpFlag := cmd.Bool("help", false, "Print help and exit.")
@@ -108,6 +120,18 @@ func vsixCmd(args []string) error {
 }
 
 func containerCmd(args []string) error {
+	cmd, args := subCommand(args)
+	switch cmd {
+	case "export":
+		return containerExportCmd(args)
+	case "import":
+		return fmt.Errorf("not yet implemented")
+	default:
+		return fmt.Errorf("impex container subcommand missing, expected export or import")
+	}
+}
+
+func containerExportCmd(args []string) error {
 	cmd := flag.NewFlagSet("container", flag.ExitOnError)
 	fileName := cmd.String("file", "", "Path to the list of containers to download.")
 	helpFlag := cmd.Bool("help", false, "Print help and exit.")
@@ -121,6 +145,18 @@ func containerCmd(args []string) error {
 }
 
 func gitCmd(args []string) error {
+	cmd, args := subCommand(args)
+	switch cmd {
+	case "export":
+		return gitExportCmd(args)
+	case "import":
+		return fmt.Errorf("not yet implemented")
+	default:
+		return fmt.Errorf("impex git subcommand missing, expected export or import")
+	}
+}
+
+func gitExportCmd(args []string) error {
 	cmd := flag.NewFlagSet("git", flag.ExitOnError)
 	fileName := cmd.String("file", "", "Path to the list of git repositories to download.")
 	accessToken := cmd.String("accessToken", "", "Github access token, or password.")
