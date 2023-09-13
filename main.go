@@ -22,10 +22,10 @@ var help = `Usage: impex [cmd]
 
 Examples:
 
-  impex npm -lock-file=/path/to/package-lock.json
-  impex vsix -file=/path/to/file/list.txt
-  impex container -file=/path/to/file/list.txt
-  impex git -file=/path/to/file/list.txt
+  impex npm -lock-file=/package-lock.json
+  impex vsix -file=./vsix.txt
+  impex container -file=./containers.txt
+  impex git -file=./git.txt -accessToken=ghp_fdsfdsfd
 `
 
 func main() {
@@ -112,14 +112,16 @@ func containerCmd(args []string) {
 func gitCmd(args []string) {
 	cmd := flag.NewFlagSet("git", flag.ExitOnError)
 	fileName := cmd.String("file", "", "Path to the list of git repositories to download.")
+	accessToken := cmd.String("accessToken", "", "Github access token, or password.")
 	helpFlag := cmd.Bool("help", false, "Print help and exit.")
 	err := cmd.Parse(args)
-	if err != nil || *helpFlag || fileName == nil || *fileName == "" {
+	if err != nil || *helpFlag || fileName == nil || *fileName == "" || accessToken == nil || *accessToken == "" {
 		cmd.PrintDefaults()
 		return
 	}
 	err = git.Run(git.Arguments{
-		FileName: *fileName,
+		FileName:    *fileName,
+		AccessToken: *accessToken,
 	})
 	if err != nil {
 		fmt.Println(err.Error())

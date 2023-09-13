@@ -9,20 +9,19 @@ import (
 	"strings"
 	"time"
 
-	"context"
-
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 
 	"log/slog"
 )
 
 type Arguments struct {
-	FileName string
-	Log      *slog.Logger
+	FileName    string
+	AccessToken string
+	Log         *slog.Logger
 }
 
 func Run(args Arguments) error {
-	ctx := context.Background()
 	start := time.Now()
 
 	// Create log.
@@ -53,7 +52,7 @@ func Run(args Arguments) error {
 			continue
 		}
 		log.Info("Downloading", slog.String("name", repo), slog.Int("total", len(downloads)))
-		err := download(ctx, repo)
+		err := download(repo, args.AccessToken)
 		if err != nil {
 			errs = errors.Join(err)
 		}
@@ -64,7 +63,7 @@ func Run(args Arguments) error {
 	return errs
 }
 
-func download(ctx context.Context, gitURL string) (err error) {
+func download(gitURL, accessToken string) (err error) {
 	// Get the name.
 	u, err := url.Parse(gitURL)
 	if err != nil {
@@ -77,22 +76,16 @@ func download(ctx context.Context, gitURL string) (err error) {
 
 	// Create the target.
 	targetPath := path.Join("package/git", host, strings.ToLower(u.Path))
-	if err = createOutputDirectory(targetPath); err != nil {
-		return err
-	}
 
 	// Clone the repo.
-	_, err = git.PlainClone("package/git/", false, &git.CloneOptions{
-		URL:      gitURL,
+	_, err = git.PlainClone(targetPath, false, &git.CloneOptions{
+		URL: gitURL,
+		Auth: &http.BasicAuth{
+			Username: "git",
+			Password: accessToken,
+		},
 		Progress: os.Stdout,
 	})
 
 	return err
-}
-
-func createOutputDirectory(dir string) error {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return os.MkdirAll(dir, 0770)
-	}
-	return nil
 }
