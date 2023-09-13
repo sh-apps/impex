@@ -3,12 +3,11 @@ package container
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"time"
-	"unicode"
 
 	"context"
 
@@ -37,11 +36,6 @@ func Run(args Arguments) error {
 	data, err := os.ReadFile(args.FileName)
 	if err != nil {
 		return fmt.Errorf("failed to open input file: %w", err)
-	}
-
-	// Create output directory if required.
-	if err = createOutputDirectory(); err != nil {
-		return err
 	}
 
 	// Download git repos.
@@ -80,41 +74,25 @@ func download(ctx context.Context, gitURL string) (err error) {
 	if u.Hostname() == "" {
 		host = "localhost"
 	}
-	path := strings.ToLower(u.Path)
 
 	// Create the target.
-	targetPath := path.Join("package/git", host, path)
-	w, err := os.Create(targetFileName)
-	if err != nil {
+	targetPath := path.Join("package/git", host, strings.ToLower(u.Path))
+	if err = createOutputDirectory(targetPath); err != nil {
 		return err
 	}
 
 	// Clone the repo.
 	_, err = git.PlainClone("package/git/", false, &git.CloneOptions{
-		URL:      url,
+		URL:      gitURL,
 		Progress: os.Stdout,
 	})
 
-	// Copy data.
-	_, err = io.Copy(w, r)
 	return err
 }
 
-func getFileName(name string) string {
-	var sb strings.Builder
-	for _, c := range name {
-		if !unicode.IsLetter(c) && !unicode.IsDigit(c) {
-			sb.WriteRune('_')
-			continue
-		}
-		sb.WriteRune(c)
-	}
-	return sb.String()
-}
-
-func createOutputDirectory() error {
-	if _, err := os.Stat("package/git"); os.IsNotExist(err) {
-		return os.MkdirAll("package/git", 0770)
+func createOutputDirectory(dir string) error {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return os.MkdirAll(dir, 0770)
 	}
 	return nil
 }
