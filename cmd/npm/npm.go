@@ -15,7 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 type NPMLock struct {

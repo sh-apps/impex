@@ -6,21 +6,25 @@ import (
 	"os"
 
 	"github.com/example-pipeline/impex/cmd/container"
+	"github.com/example-pipeline/impex/cmd/git"
 	"github.com/example-pipeline/impex/cmd/npm"
 	"github.com/example-pipeline/impex/cmd/vsix"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 var help = `Usage: impex [cmd]
 
   npm
 	vsix
+	container
+	git
 
 Examples:
 
   impex npm -lock-file=/path/to/package-lock.json
   impex vsix -file=/path/to/file/list.txt
   impex container -file=/path/to/file/list.txt
+  impex git -file=/path/to/file/list.txt
 `
 
 func main() {
@@ -38,6 +42,10 @@ func main() {
 		vsixCmd(args[1:])
 	case "container":
 		containerCmd(args[1:])
+	case "containers":
+		containerCmd(args[1:])
+	case "git":
+		gitCmd(args[1:])
 	default:
 		fmt.Println(help)
 	}
@@ -92,6 +100,24 @@ func containerCmd(args []string) {
 		return
 	}
 	err = container.Run(container.Arguments{
+		FileName: *fileName,
+	})
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+}
+
+func gitCmd(args []string) {
+	cmd := flag.NewFlagSet("git", flag.ExitOnError)
+	fileName := cmd.String("file", "", "Path to the list of git repositories to download.")
+	helpFlag := cmd.Bool("help", false, "Print help and exit.")
+	err := cmd.Parse(args)
+	if err != nil || *helpFlag || fileName == nil || *fileName == "" {
+		cmd.PrintDefaults()
+		return
+	}
+	err = git.Run(git.Arguments{
 		FileName: *fileName,
 	})
 	if err != nil {

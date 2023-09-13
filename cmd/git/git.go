@@ -4,15 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
-	"path"
 	"strings"
 	"time"
 	"unicode"
 
 	"context"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
+
+	"github.com/go-git/go-git/v5"
 
 	"log/slog"
 )
@@ -23,6 +23,7 @@ type Arguments struct {
 }
 
 func Run(args Arguments) error {
+	ctx := context.Background()
 	start := time.Now()
 
 	// Create log.
@@ -43,22 +44,22 @@ func Run(args Arguments) error {
 		return err
 	}
 
-	// Download vsix files.
+	// Download git repos.
 	downloads := strings.Split(string(data), "\n")
 	var errs error
 	var downloadsComplete int
-	for _, container := range downloads {
-		if len(container) == 0 {
+	for _, repo := range downloads {
+		if len(repo) == 0 {
 			downloadsComplete++
 			continue
 		}
-		if strings.HasPrefix(container, "#") {
-			log.Info("Skipping", slog.String("name", container), slog.Int("total", len(downloads)))
+		if strings.HasPrefix(repo, "#") {
+			log.Info("Skipping", slog.String("name", repo), slog.Int("total", len(downloads)))
 			downloadsComplete++
 			continue
 		}
-		log.Info("Downloading", slog.String("name", container), slog.Int("total", len(downloads)))
-		err := download(container)
+		log.Info("Downloading", slog.String("name", repo), slog.Int("total", len(downloads)))
+		err := download(ctx, repo)
 		if err != nil {
 			errs = errors.Join(err)
 		}
@@ -69,36 +70,30 @@ func Run(args Arguments) error {
 	return errs
 }
 
-func download(name string) (err error) {
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+func download(ctx context.Context, gitURL string) (err error) {
+	// Get the name.
+	u, err := url.Parse(gitURL)
 	if err != nil {
-		return fmt.Errorf("failed to create CLI client: %w", err)
+		return fmt.Errorf("failed to parse url: %w", err)
 	}
-
-	// Pull the image.
-	reader, err := cli.ImagePull(ctx, name, types.ImagePullOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to pull image: %w", err)
+	host := u.Hostname()
+	if u.Hostname() == "" {
+		host = "localhost"
 	}
-	_, err = io.Copy(os.Stdout, reader)
-	if err != nil {
-		return fmt.Errorf("failed to pull image: %w", err)
-	}
-
-	// Save the output.
-	r, err := cli.ImageSave(ctx, []string{name})
-	defer r.Close()
-	if err != nil {
-		return fmt.Errorf("failed to save image: %w", err)
-	}
+	path := strings.ToLower(u.Path)
 
 	// Create the target.
-	targetFileName := path.Join("package/containers", getFileName(name))
+	targetPath := path.Join("package/git", host, path)
 	w, err := os.Create(targetFileName)
 	if err != nil {
 		return err
 	}
+
+	// Clone the repo.
+	_, err = git.PlainClone("package/git/", false, &git.CloneOptions{
+		URL:      url,
+		Progress: os.Stdout,
+	})
 
 	// Copy data.
 	_, err = io.Copy(w, r)
@@ -118,8 +113,8 @@ func getFileName(name string) string {
 }
 
 func createOutputDirectory() error {
-	if _, err := os.Stat("package/containers"); os.IsNotExist(err) {
-		return os.MkdirAll("package/containers", 0770)
+	if _, err := os.Stat("package/git"); os.IsNotExist(err) {
+		return os.MkdirAll("package/git", 0770)
 	}
 	return nil
 }
