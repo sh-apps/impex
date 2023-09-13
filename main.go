@@ -1,11 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
-
-	"log/slog"
 
 	"github.com/example-pipeline/impex/cmd/container"
 	"github.com/example-pipeline/impex/cmd/git"
@@ -22,10 +21,10 @@ var help = `Usage: impex [cmd]
 
 Examples:
 
-  impex npm -lock-file=/package-lock.json
-  impex vsix -file=./vsix.txt
-  impex container -file=./containers.txt
-  impex git -file=./git.txt -accessToken=ghp_fdsfdsfd
+  impex npm export -lock-file=/package-lock.json
+  impex vsix export -file=./vsix.txt
+  impex container export -file=./containers.txt
+  impex git export -file=./git.txt -accessToken=ghp_fdsfdsfd
 `
 
 func main() {
@@ -38,93 +37,100 @@ func main() {
 	var err error
 	switch cmd {
 	case "npm":
-		npmCmd(args[1:])
+		err = npmCmd(args[1:])
 	case "vsix":
-		vsixCmd(args[1:])
+		err = vsixCmd(args[1:])
 	case "container":
-		containerCmd(args[1:])
+		err = containerCmd(args[1:])
 	case "containers":
-		containerCmd(args[1:])
+		err = containerCmd(args[1:])
 	case "git":
-		gitCmd(args[1:])
+		err = gitCmd(args[1:])
 	default:
 		fmt.Println(help)
 	}
 	if err != nil {
-		slog.Error("command failed", slog.Any("error", err))
-	}
-}
-
-func npmCmd(args []string) {
-	cmd := flag.NewFlagSet("npm", flag.ExitOnError)
-	fileName := cmd.String("lock-file", "", "Path to the lock file.")
-	helpFlag := cmd.Bool("help", false, "Print help and exit.")
-	err := cmd.Parse(args)
-	if err != nil || *helpFlag || fileName == nil || *fileName == "" {
-		cmd.PrintDefaults()
-		return
-	}
-	err = npm.Run(npm.Arguments{
-		FileName: *fileName,
-	})
-	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-func vsixCmd(args []string) {
+func subCommand(inArgs []string) (cmd string, args []string) {
+	if len(inArgs) == 0 {
+		return "", inArgs
+	}
+	return inArgs[0], inArgs[1:]
+}
+
+func npmCmd(args []string) error {
+	cmd, args := subCommand(args)
+	switch cmd {
+	case "export":
+		return npmExportCommand(args)
+	case "import":
+		return fmt.Errorf("not yet implemented")
+	default:
+		return fmt.Errorf("impex npm subcommand missing, expected export or import")
+	}
+}
+
+func ErrInvalidArgs(cmd *flag.FlagSet) error {
+	b := new(bytes.Buffer)
+	cmd.SetOutput(b)
+	cmd.PrintDefaults()
+	return fmt.Errorf(b.String())
+}
+
+func npmExportCommand(args []string) error {
+	cmd := flag.NewFlagSet("export", flag.ExitOnError)
+	fileName := cmd.String("lock-file", "", "Path to the lock file.")
+	helpFlag := cmd.Bool("help", false, "Print help and exit.")
+	err := cmd.Parse(args)
+	if err != nil || *helpFlag || fileName == nil || *fileName == "" {
+		return ErrInvalidArgs(cmd)
+	}
+	return npm.Run(npm.Arguments{
+		FileName: *fileName,
+	})
+}
+
+func vsixCmd(args []string) error {
 	cmd := flag.NewFlagSet("vsix", flag.ExitOnError)
 	fileName := cmd.String("file", "", "Path to the list of packages to download.")
 	helpFlag := cmd.Bool("help", false, "Print help and exit.")
 	err := cmd.Parse(args)
 	if err != nil || *helpFlag || fileName == nil || *fileName == "" {
-		cmd.PrintDefaults()
-		return
+		return ErrInvalidArgs(cmd)
 	}
-	err = vsix.Run(vsix.Arguments{
+	return vsix.Run(vsix.Arguments{
 		FileName: *fileName,
 	})
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
 }
 
-func containerCmd(args []string) {
+func containerCmd(args []string) error {
 	cmd := flag.NewFlagSet("container", flag.ExitOnError)
 	fileName := cmd.String("file", "", "Path to the list of containers to download.")
 	helpFlag := cmd.Bool("help", false, "Print help and exit.")
 	err := cmd.Parse(args)
 	if err != nil || *helpFlag || fileName == nil || *fileName == "" {
-		cmd.PrintDefaults()
-		return
+		return ErrInvalidArgs(cmd)
 	}
-	err = container.Run(container.Arguments{
+	return container.Run(container.Arguments{
 		FileName: *fileName,
 	})
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
 }
 
-func gitCmd(args []string) {
+func gitCmd(args []string) error {
 	cmd := flag.NewFlagSet("git", flag.ExitOnError)
 	fileName := cmd.String("file", "", "Path to the list of git repositories to download.")
 	accessToken := cmd.String("accessToken", "", "Github access token, or password.")
 	helpFlag := cmd.Bool("help", false, "Print help and exit.")
 	err := cmd.Parse(args)
 	if err != nil || *helpFlag || fileName == nil || *fileName == "" || accessToken == nil || *accessToken == "" {
-		cmd.PrintDefaults()
-		return
+		return ErrInvalidArgs(cmd)
 	}
-	err = git.Run(git.Arguments{
+	return git.Run(git.Arguments{
 		FileName:    *fileName,
 		AccessToken: *accessToken,
 	})
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
 }
