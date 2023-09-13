@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"log/slog"
+
 	"github.com/example-pipeline/impex/cmd/container"
 	"github.com/example-pipeline/impex/cmd/git"
 	"github.com/example-pipeline/impex/cmd/npm"
 	"github.com/example-pipeline/impex/cmd/vsix"
-	"log/slog"
 )
 
 var help = `Usage: impex [cmd]
