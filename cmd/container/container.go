@@ -43,7 +43,7 @@ func Run(args Arguments) error {
 		return err
 	}
 
-	// Download vsix files.
+	// Download OCI container images.
 	downloads := strings.Split(string(data), "\n")
 	var errs error
 	var downloadsComplete int
