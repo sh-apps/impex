@@ -34,6 +34,7 @@
           name = "impex";
           src = gitignore.lib.gitignoreSource ./.;
           CGO_ENABLED = 0;
+          vendorHash = null;
           flags = [
             "-trimpath"
           ];
