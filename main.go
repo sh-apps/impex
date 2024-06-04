@@ -15,9 +15,9 @@ import (
 var help = `Usage: impex [cmd]
 
   npm
-	vsix
-	container
-	git
+  vsix
+  container
+  git
 
 Examples:
 

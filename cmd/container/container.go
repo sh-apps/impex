@@ -11,6 +11,7 @@ import (
 	"unicode"
 
 	"context"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 
@@ -71,7 +72,7 @@ func Run(args Arguments) error {
 
 func download(name string) (err error) {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return fmt.Errorf("failed to create CLI client: %w", err)
 	}
@@ -79,30 +80,34 @@ func download(name string) (err error) {
 	// Pull the image.
 	reader, err := cli.ImagePull(ctx, name, types.ImagePullOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to pull image: %w", err)
+		return fmt.Errorf("%s: failed to pull image: %w", name, err)
 	}
 	_, err = io.Copy(os.Stdout, reader)
 	if err != nil {
-		return fmt.Errorf("failed to pull image: %w", err)
+		return fmt.Errorf("%s: failed to copy image: %w", name, err)
 	}
 
 	// Save the output.
 	r, err := cli.ImageSave(ctx, []string{name})
 	defer r.Close()
 	if err != nil {
-		return fmt.Errorf("failed to save image: %w", err)
+		return fmt.Errorf("%s: failed to save image: %w", name, err)
 	}
 
 	// Create the target.
 	targetFileName := path.Join("package/containers", getFileName(name))
 	w, err := os.Create(targetFileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: failed to create target file %q: %w", name, targetFileName, err)
 	}
 
 	// Copy data.
 	_, err = io.Copy(w, r)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: failed to copy data: %w", name, err)
+	}
+
+	return nil
 }
 
 func getFileName(name string) string {
