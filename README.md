@@ -7,7 +7,7 @@ Download all the stuff we need for airgapped environments from an input file.
 ### download-npm
 
 ```
-go run *.go npm -lock-file=../app-nodejs/package-lock.json
+go run *.go npm export -lock-file=../app-nodejs/package-lock.json
 ```
 
 ### download-vsix
