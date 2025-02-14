@@ -2,7 +2,7 @@
   description = "impex";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     gitignore = {
       url = "github:hercules-ci/gitignore.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -30,7 +30,7 @@
       packages = forAllSystems ({ pkgs, ... }: rec {
         default = impex;
 
-        impex = pkgs.buildGo121Module {
+        impex = pkgs.buildGoModule {
           name = "impex";
           src = gitignore.lib.gitignoreSource ./.;
           CGO_ENABLED = 0;
@@ -50,8 +50,8 @@
       devShell = forAllSystems ({ system, pkgs }:
         pkgs.mkShell {
           buildInputs = with pkgs; [
-            (golangci-lint.override { buildGoModule = buildGo121Module; })
-            go_1_21
+            golangci-lint
+            go
             xc.packages.${system}.xc
           ];
         });
