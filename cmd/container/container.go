@@ -12,7 +12,7 @@ import (
 
 	"context"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 
 	"log/slog"
@@ -78,7 +78,7 @@ func download(name string) (err error) {
 	}
 
 	// Pull the image.
-	reader, err := cli.ImagePull(ctx, name, types.ImagePullOptions{})
+	reader, err := cli.ImagePull(ctx, name, image.PullOptions{})
 	if err != nil {
 		return fmt.Errorf("%s: failed to pull image: %w", name, err)
 	}
